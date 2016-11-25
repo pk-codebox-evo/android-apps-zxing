@@ -307,14 +307,11 @@ public final class BitMatrix implements Cloneable {
       }
     }
 
-    int width = right - left;
-    int height = bottom - top;
-
-    if (width < 0 || height < 0) {
+    if (right < left || bottom < top) {
       return null;
     }
 
-    return new int[] {left, top, width, height};
+    return new int[] {left, top, right - left + 1, bottom - top + 1};
   }
 
   /**
@@ -419,7 +416,7 @@ public final class BitMatrix implements Cloneable {
    * @return string representation of entire matrix utilizing given strings
    */
   public String toString(String setString, String unsetString) {
-    return toString(setString, unsetString, "\n");
+    return buildToString(setString, unsetString, "\n");
   }
 
   /**
@@ -431,6 +428,10 @@ public final class BitMatrix implements Cloneable {
    */
   @Deprecated
   public String toString(String setString, String unsetString, String lineSeparator) {
+    return buildToString(setString, unsetString, lineSeparator);
+  }
+
+  private String buildToString(String setString, String unsetString, String lineSeparator) {
     StringBuilder result = new StringBuilder(height * (width + 1));
     for (int y = 0; y < height; y++) {
       for (int x = 0; x < width; x++) {

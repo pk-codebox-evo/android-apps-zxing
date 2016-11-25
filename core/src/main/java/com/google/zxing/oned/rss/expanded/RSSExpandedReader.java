@@ -127,16 +127,14 @@ public final class RSSExpandedReader extends AbstractRSSReader {
     this.pairs.clear();
     this.startFromEven = false;
     try {
-      List<ExpandedPair> pairs = decodeRow2pairs(rowNumber, row);
-      return constructResult(pairs);
+      return constructResult(decodeRow2pairs(rowNumber, row));
     } catch (NotFoundException e) {
       // OK
     }
 
     this.pairs.clear();
     this.startFromEven = true;
-    List<ExpandedPair> pairs = decodeRow2pairs(rowNumber, row);
-    return constructResult(pairs);
+    return constructResult(decodeRow2pairs(rowNumber, row));
   }
 
   @Override
@@ -165,8 +163,7 @@ public final class RSSExpandedReader extends AbstractRSSReader {
     }
     
     boolean tryStackedDecode = !this.rows.isEmpty();
-    boolean wasReversed = false; // TODO: deal with reversed rows
-    storeRow(rowNumber, wasReversed);
+    storeRow(rowNumber, false); // TODO: deal with reversed rows
     if (tryStackedDecode) {
       // When the image is 180-rotated, then rows are sorted in wrong direction.
       // Try twice with both the directions.
@@ -455,8 +452,7 @@ public final class RSSExpandedReader extends AbstractRSSReader {
     } catch (NotFoundException ignored) {
       rightChar = null;
     }
-    boolean mayBeLast = true;
-    return new ExpandedPair(leftChar, rightChar, pattern, mayBeLast);
+    return new ExpandedPair(leftChar, rightChar, pattern, true);
   }
 
   private void findNextPair(BitArray row, List<ExpandedPair> previousPairs, int forcedOffset)
@@ -608,7 +604,7 @@ public final class RSSExpandedReader extends AbstractRSSReader {
     } //counters[] has the pixels of the module
 
     int numModules = 17; //left and right data characters have all the same length
-    float elementWidth = (float) MathUtils.sum(counters) / (float) numModules;
+    float elementWidth = MathUtils.sum(counters) / (float) numModules;
 
     // Sanity check: element width for pattern and the character should match
     float expectedElementWidth = (pattern.getStartEnd()[1] - pattern.getStartEnd()[0]) / 15.0f;
@@ -694,9 +690,6 @@ public final class RSSExpandedReader extends AbstractRSSReader {
 
     int oddSum = MathUtils.sum(this.getOddCounts());
     int evenSum = MathUtils.sum(this.getEvenCounts());
-    int mismatch = oddSum + evenSum - numModules;
-    boolean oddParityBad = (oddSum & 0x01) == 1;
-    boolean evenParityBad = (evenSum & 0x01) == 0;
 
     boolean incrementOdd = false;
     boolean decrementOdd = false;
@@ -714,6 +707,9 @@ public final class RSSExpandedReader extends AbstractRSSReader {
       incrementEven = true;
     }
 
+    int mismatch = oddSum + evenSum - numModules;
+    boolean oddParityBad = (oddSum & 0x01) == 1;
+    boolean evenParityBad = (evenSum & 0x01) == 0;
     if (mismatch == 1) {
       if (oddParityBad) {
         if (evenParityBad) {
